@@ -4,46 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**DaPoint** is an iOS/iPadOS app for counting points across various board games and card games. It targets the App Store, so all code must comply with Apple's App Store Review Guidelines and Human Interface Guidelines (HIG).
+**DaPoint** is a cross-platform app for counting points across various board games and card games, targeting both the Apple App Store and Google Play Store.
 
+```
+DaPoint/
+├── ios/        — iOS/iPadOS app (SwiftUI + SwiftData)
+└── flutter/    — Android + iOS app (Flutter) — à venir
+```
+
+## iOS App
+
+**Stack:** SwiftUI + SwiftData — no UIKit, no third-party dependencies.  
 Supported platforms: iPhone, iPad, visionOS  
 Minimum deployment: iOS 26.5 / xrOS 26.5  
 Bundle ID: `lamphilippe.com.DaPoint`
 
-## Build & Test
-
-All builds and tests go through Xcode or `xcodebuild`. There is no separate package manager (no CocoaPods, no SPM dependencies currently).
+### Build & Test
 
 ```bash
+cd ios
+
 # Build (simulator)
 xcodebuild -project DaPoint.xcodeproj -scheme DaPoint -destination 'platform=iOS Simulator,name=iPhone 16' build
 
 # Run unit tests
 xcodebuild -project DaPoint.xcodeproj -scheme DaPoint -destination 'platform=iOS Simulator,name=iPhone 16' test
-
-# Run a single test class
-xcodebuild -project DaPoint.xcodeproj -scheme DaPoint -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:DaPointTests/DaPointTests test
 ```
 
-Open `DaPoint.xcodeproj` in Xcode to run on a real device or use SwiftUI Previews during development.
+Open `ios/DaPoint.xcodeproj` in Xcode to run on a real device or use SwiftUI Previews.
 
-## Architecture
+### Architecture
 
-**Stack:** SwiftUI + SwiftData — no UIKit, no third-party dependencies.
+- `DaPointApp.swift` — entry point; sets up `ModelContainer` (schema: `GameSession`, `SessionPlayer`, `RoundScore`). Includes error recovery: deletes old SQLite store on schema migration failure.
+- `SplashScreenView.swift` — animated splash, then pushes `HomeView`
+- `HomeView.swift` — favorite games list (`@AppStorage("favoriteGameIds")`)
+- `SessionListView.swift` — sessions filtered by game; first row = "Nouvelle partie"; DisclosureGroup filter
+- `NewSessionView.swift` — creates session + players, then navigates to `SessionDetailView`
+- `SessionDetailView.swift` — score table (players as rows, rounds as columns newest-first, pinned Total column)
+- `EnterRoundScoresView.swift` — per-player score entry (digits only)
+- `GamesRegistry.swift` — static list of games (`Game` struct with id, displayName, rulesURL)
+- `AppIconView.swift` — brand gradient + LogoMark; `IconExporterView` for generating the 1024×1024 icon PNG
 
-- `DaPointApp.swift` — app entry point; sets up the shared `ModelContainer` with persistent storage.
-- `ContentView.swift` — root view injected with the SwiftData `modelContext` via `@Environment`.
-- `Item.swift` — SwiftData `@Model` class (currently a placeholder to be replaced with game/score models).
+Data flow: SwiftData `ModelContainer` → `modelContext` (environment) → views via `@Query`. All mutations via `modelContext.insert` / `modelContext.delete`.
 
-Data flows from SwiftData's `ModelContainer` → `modelContext` (environment) → views via `@Query`. All mutations go through `modelContext.insert` / `modelContext.delete` with `withAnimation`.
+### App Store Compliance
 
-The `NavigationViewWrapper` in `ContentView.swift` handles the iOS vs macOS layout difference (`NavigationSplitView` on macOS, plain content on iOS).
+- Native controls, system fonts, SF Symbols only. No private APIs.
+- All user-facing strings must be localizable.
+- Storage is local on-device (no iCloud sync currently).
+- Support portrait + landscape on iPhone; all orientations on iPad.
 
-## App Store Compliance Requirements
+## Flutter App
 
-- Follow Apple's HIG for all UI: use native controls, system fonts, SF Symbols.
-- No private APIs.
-- All user-facing strings must be localizable (`String(localized:)` or `.strings` catalogs).
-- Privacy: declare only the entitlements and permissions actually used. Current entitlements: `ENABLE_APP_SANDBOX`, `ENABLE_USER_SELECTED_FILES = readonly`.
-- SwiftData storage is local on-device (no iCloud sync currently); any future cloud feature requires a Privacy Nutrition Label update.
-- Support both portrait and landscape on iPhone; all orientations on iPad.
+À implémenter — même fonctionnalité que l'app iOS, ciblant Android (et iOS en bonus).
