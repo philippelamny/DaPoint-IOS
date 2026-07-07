@@ -30,10 +30,7 @@ class DaPointApp extends StatelessWidget {
         title: 'DaPoint',
         debugShowCheckedModeBanner: false,
         locale: const Locale('fr'),
-        theme: ThemeData(
-          useMaterial3: true,
-          colorSchemeSeed: Brand.start,
-        ),
+        theme: Brand.theme(),
         home: const SplashScreen(),
       ),
     );

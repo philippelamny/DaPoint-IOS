@@ -57,3 +57,7 @@ Data flow: SwiftData `ModelContainer` → `modelContext` (environment) → views
 ## Flutter App
 
 À implémenter — même fonctionnalité que l'app iOS, ciblant Android (et iOS en bonus).
+
+### Conventions UX (tous les jeux)
+
+- **Ajout de joueur(s)** : après l'ajout d'un joueur (via le bouton ou la touche Entrée), le champ de saisie se vide et reprend automatiquement le focus, pour enchaîner l'ajout du joueur suivant sans re-taper sur le champ. Voir `add_player_screen.dart` et `new_session_screen.dart`. Cette convention s'applique à tous les jeux, pas seulement à celui en cours d'implémentation.

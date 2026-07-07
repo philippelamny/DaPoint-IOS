@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../data/games_registry.dart';
 import '../data/session_repository.dart';
 import '../models/game_session.dart';
 import '../models/round_score.dart';
 import '../models/session_player.dart';
 import '../models/session_status.dart';
+import '../theme/brand.dart';
 import 'add_player_screen.dart';
 import 'enter_round_scores_screen.dart';
+
+const _medals = ['🥇', '🥈', '🥉'];
 
 class SessionDetailScreen extends StatelessWidget {
   const SessionDetailScreen({super.key, required this.session});
@@ -21,22 +26,62 @@ class SessionDetailScreen extends StatelessWidget {
   }
 
   int? _points(List<RoundScore> scores, SessionPlayer player, int round) {
+    return _entry(scores, player, round)?.points;
+  }
+
+  RoundScore? _entry(List<RoundScore> scores, SessionPlayer player, int round) {
     for (final s in scores) {
-      if (s.playerName == player.name && s.roundNumber == round) return s.points;
+      if (s.playerName == player.name && s.roundNumber == round) return s;
     }
     return null;
+  }
+
+  void _showRoundDetail(BuildContext context, SessionPlayer player, int round, RoundScore entry) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${player.name} — Manche $round',
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                DateFormat("d MMM yyyy 'à' HH:mm", 'fr_FR').format(entry.createdAt),
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 16),
+              if (entry.remainingCards != null)
+                _DetailRow(label: 'Cartes restantes', value: '${entry.remainingCards}'),
+              if (entry.placedCards != null)
+                _DetailRow(label: 'Cartes posées', value: '${entry.placedCards}'),
+              _DetailRow(label: 'Score', value: '${entry.points} pts', bold: true),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   int _total(List<RoundScore> scores, SessionPlayer player) {
     return scores.where((s) => s.playerName == player.name).fold(0, (sum, s) => sum + s.points);
   }
 
-  bool _isLeader(List<SessionPlayer> players, List<RoundScore> scores, SessionPlayer player) {
-    final rounds = _roundNumbers(scores);
-    if (rounds.isEmpty) return false;
-    final totals = players.map((p) => _total(scores, p));
-    final min = totals.reduce((a, b) => a < b ? a : b);
-    return _total(scores, player) == min;
+  List<SessionPlayer> _ranked(List<SessionPlayer> players, List<RoundScore> scores, bool highestWins) {
+    return [...players]..sort((a, b) => highestWins
+        ? _total(scores, b).compareTo(_total(scores, a))
+        : _total(scores, a).compareTo(_total(scores, b)));
+  }
+
+  int? _rank(List<SessionPlayer> ranked, List<RoundScore> scores, SessionPlayer player) {
+    if (scores.isEmpty) return null;
+    final index = ranked.indexOf(player);
+    return index < 3 ? index : null;
   }
 
   @override
@@ -47,6 +92,8 @@ class SessionDetailScreen extends StatelessWidget {
     final roundNumbers = _roundNumbers(scores);
     final nextRound = (roundNumbers.isEmpty ? 0 : roundNumbers.last) + 1;
     final isOngoing = session.status == SessionStatus.ongoing;
+    final highestWins = GamesRegistry.game(session.gameId)?.highestWins ?? false;
+    final ranked = _ranked(players, scores, highestWins);
 
     return Scaffold(
       appBar: AppBar(
@@ -96,7 +143,11 @@ class SessionDetailScreen extends StatelessWidget {
                       roundNumbers: roundNumbers,
                       total: _total,
                       points: _points,
-                      isLeader: (p) => _isLeader(players, scores, p),
+                      rank: (p) => _rank(ranked, scores, p),
+                      onTapScore: (player, round) {
+                        final entry = _entry(scores, player, round);
+                        if (entry != null) _showRoundDetail(context, player, round, entry);
+                      },
                     ),
                   ),
                 ),
@@ -129,6 +180,31 @@ class SessionDetailScreen extends StatelessWidget {
   }
 }
 
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value, this.bold = false});
+
+  final String label;
+  final String value;
+  final bool bold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[700])),
+          Text(
+            value,
+            style: TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EmptyPlayers extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -154,7 +230,8 @@ class _ScoreTable extends StatelessWidget {
     required this.roundNumbers,
     required this.total,
     required this.points,
-    required this.isLeader,
+    required this.rank,
+    required this.onTapScore,
   });
 
   final List<SessionPlayer> players;
@@ -162,7 +239,8 @@ class _ScoreTable extends StatelessWidget {
   final List<int> roundNumbers;
   final int Function(List<RoundScore>, SessionPlayer) total;
   final int? Function(List<RoundScore>, SessionPlayer, int) points;
-  final bool Function(SessionPlayer) isLeader;
+  final int? Function(SessionPlayer) rank;
+  final void Function(SessionPlayer player, int round) onTapScore;
 
   static const double rowH = 40;
   static const double headH = 34;
@@ -197,8 +275,8 @@ class _ScoreTable extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (isLeader(player)) ...[
-                              const Icon(Icons.emoji_events, size: 10, color: Colors.amber),
+                            if (rank(player) != null) ...[
+                              Text(_medals[rank(player)!], style: const TextStyle(fontSize: 12)),
                               const SizedBox(width: 4),
                             ],
                             Flexible(
@@ -243,14 +321,17 @@ class _ScoreTable extends StatelessWidget {
                               SizedBox(
                                 width: colW,
                                 height: rowH,
-                                child: Center(
-                                  child: Text(
-                                    points(scores, player, round)?.toString() ?? '—',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: points(scores, player, round) == null
-                                          ? Colors.grey
-                                          : null,
+                                child: InkWell(
+                                  onTap: () => onTapScore(player, round),
+                                  child: Center(
+                                    child: Text(
+                                      points(scores, player, round)?.toString() ?? '—',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: points(scores, player, round) == null
+                                            ? Colors.grey
+                                            : null,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -286,7 +367,7 @@ class _ScoreTable extends StatelessWidget {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
-                              color: isLeader(player) ? Colors.green : null,
+                              color: rank(player) == 0 ? Brand.accent : null,
                             ),
                           ),
                         ),

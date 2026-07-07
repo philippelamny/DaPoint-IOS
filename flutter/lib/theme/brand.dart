@@ -4,12 +4,111 @@ abstract final class Brand {
   static const start = Color.fromRGBO(46, 66, 212, 1); // 0.18, 0.26, 0.83
   static const end = Color.fromRGBO(125, 36, 212, 1); // 0.49, 0.14, 0.83
   static const accent = Color.fromRGBO(255, 158, 0, 1); // 1.00, 0.62, 0.00
+  static const surfaceTint = Color.fromRGBO(46, 66, 212, 0.06);
 
   static const gradient = LinearGradient(
     colors: [start, end],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
+
+  static ThemeData theme() {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: start,
+      primary: start,
+      secondary: accent,
+      brightness: Brightness.light,
+    );
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: const Color(0xFFF6F6FB),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        foregroundColor: Color(0xFF1B1B2A),
+        titleTextStyle: TextStyle(
+          color: Color(0xFF1B1B2A),
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: start,
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: start,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: accent,
+        foregroundColor: Colors.white,
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        color: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE3E3EE)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE3E3EE)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: start, width: 1.6),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(color: Color(0xFFECECF4)),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected) ? start : null,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? start.withValues(alpha: 0.5)
+              : null,
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: SegmentedButton.styleFrom(
+          selectedBackgroundColor: start,
+          selectedForegroundColor: Colors.white,
+        ),
+      ),
+    );
+  }
 }
 
 /// Mirrors LogoMark from AppIconView.swift: the "D" of DaPoint with its

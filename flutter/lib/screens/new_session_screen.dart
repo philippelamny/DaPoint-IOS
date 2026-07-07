@@ -30,9 +30,12 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
     super.dispose();
   }
 
+  bool _isDuplicate(String name) =>
+      _playerNames.any((n) => n.toLowerCase() == name.toLowerCase());
+
   void _addPlayer() {
     final trimmed = _newPlayerController.text.trim();
-    if (trimmed.isEmpty) return;
+    if (trimmed.isEmpty || _isDuplicate(trimmed)) return;
     setState(() {
       _playerNames.add(trimmed);
       _newPlayerController.clear();
@@ -48,13 +51,16 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
       playerNames: _playerNames,
     );
     if (!mounted) return;
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => SessionDetailScreen(session: session)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final trimmedInput = _newPlayerController.text.trim();
+    final isDuplicateInput = trimmedInput.isNotEmpty && _isDuplicate(trimmedInput);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nouvelle partie'),
@@ -102,7 +108,10 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                   child: TextField(
                     controller: _newPlayerController,
                     focusNode: _newPlayerFocusNode,
-                    decoration: const InputDecoration(hintText: 'Ajouter un joueur'),
+                    decoration: InputDecoration(
+                      hintText: 'Ajouter un joueur',
+                      errorText: isDuplicateInput ? 'Ce nom existe déjà' : null,
+                    ),
                     autocorrect: false,
                     onChanged: (_) => setState(() {}),
                     onSubmitted: (_) => _addPlayer(),
@@ -110,7 +119,7 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.add_circle),
-                  onPressed: _newPlayerController.text.trim().isEmpty ? null : _addPlayer,
+                  onPressed: trimmedInput.isEmpty || isDuplicateInput ? null : _addPlayer,
                 ),
               ],
             ),

@@ -3,14 +3,19 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/games_registry.dart';
 import '../data/session_repository.dart';
 import '../models/game.dart';
 import '../models/game_session.dart';
 import '../models/round_score.dart';
 import '../models/session_player.dart';
 import '../models/session_status.dart';
+import '../theme/brand.dart';
 import 'new_session_screen.dart';
+import 'rules_screen.dart';
 import 'session_detail_screen.dart';
+
+const _medals = ['🥇', '🥈', '🥉'];
 
 class SessionListScreen extends StatefulWidget {
   const SessionListScreen({super.key, required this.game});
@@ -38,12 +43,15 @@ class _SessionListScreenState extends State<SessionListScreen> {
 
   List<GameSession> _filtered(List<GameSession> sessions) {
     return sessions.where((session) {
-      if (_filterStatus != null && session.status != _filterStatus) return false;
+      if (_filterStatus != null && session.status != _filterStatus) {
+        return false;
+      }
       if (_filterName.isNotEmpty &&
           !session.name.toLowerCase().contains(_filterName.toLowerCase())) {
         return false;
       }
-      if (_filterStartDateEnabled && session.startDate.isBefore(_filterStartDate)) {
+      if (_filterStartDateEnabled &&
+          session.startDate.isBefore(_filterStartDate)) {
         return false;
       }
       if (_filterEndDateEnabled) {
@@ -86,18 +94,28 @@ class _SessionListScreenState extends State<SessionListScreen> {
     final sessions = repository.sessionsForGame(widget.game.id);
     final filteredSessions = _filtered(sessions);
     final rulesUrl = widget.game.rulesUrl;
+    final hasLocalRules =
+        widget.game.rules != null && widget.game.rules!.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.game.displayName),
-        leading: rulesUrl == null
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.menu_book_outlined),
-                tooltip: 'Règles',
-                onPressed: () => launchUrl(Uri.parse(rulesUrl), mode: LaunchMode.externalApplication),
-              ),
         actions: [
+          if (hasLocalRules || rulesUrl != null)
+            IconButton(
+              icon: const Icon(Icons.menu_book_outlined),
+              tooltip: 'Règles',
+              onPressed: hasLocalRules
+                  ? () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => RulesScreen(game: widget.game),
+                      ),
+                    )
+                  : () => launchUrl(
+                      Uri.parse(rulesUrl!),
+                      mode: LaunchMode.externalApplication,
+                    ),
+            ),
           if (sessions.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_outline),
@@ -107,49 +125,122 @@ class _SessionListScreenState extends State<SessionListScreen> {
         ],
       ),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
         children: [
-          ListTile(
-            leading: Icon(Icons.add_circle, color: Theme.of(context).colorScheme.primary),
-            title: Text(
-              'Nouvelle partie',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => NewSessionScreen(game: widget.game)),
-              );
-            },
-          ),
-          const Divider(height: 1),
-          ExpansionTile(
-            initiallyExpanded: _filterExpanded,
-            onExpansionChanged: (v) => setState(() => _filterExpanded = v),
-            leading: Icon(
-              _isFiltering ? Icons.filter_alt : Icons.filter_alt_outlined,
-              color: _isFiltering ? Theme.of(context).colorScheme.primary : Colors.grey,
-            ),
-            title: Text(
-              'Filtres',
-              style: TextStyle(
-                color: _isFiltering ? Theme.of(context).colorScheme.primary : Colors.grey[700],
-              ),
-            ),
-            children: [_buildFilterSection()],
-          ),
-          const Divider(height: 1),
-          for (final session in filteredSessions) ...[
-            InkWell(
+          Material(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => SessionDetailScreen(session: session)),
+                  MaterialPageRoute(
+                    builder: (_) => NewSessionScreen(game: widget.game),
+                  ),
                 );
               },
-              child: SessionRowView(session: session),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    Icon(Icons.add_circle, color: Colors.white),
+                    SizedBox(width: 12),
+                    Text(
+                      'Nouvelle partie',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const Divider(height: 1),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: ExpansionTile(
+              initiallyExpanded: _filterExpanded,
+              onExpansionChanged: (v) => setState(() => _filterExpanded = v),
+              shape: const RoundedRectangleBorder(side: BorderSide.none),
+              leading: Icon(
+                _isFiltering ? Icons.filter_alt : Icons.filter_alt_outlined,
+                color: _isFiltering
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey,
+              ),
+              title: Text(
+                'Filtres',
+                style: TextStyle(
+                  color: _isFiltering
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey[700],
+                ),
+              ),
+              children: [_buildFilterSection()],
+            ),
+          ),
+          const SizedBox(height: 12),
+          for (final session in filteredSessions) ...[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Dismissible(
+                  key: ValueKey(session.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  confirmDismiss: (_) async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Supprimer cette partie ?'),
+                        content: Text(
+                          '"${session.name}" et tous ses scores seront supprimés définitivement.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Annuler'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: const Text('Supprimer'),
+                          ),
+                        ],
+                      ),
+                    );
+                    return confirmed ?? false;
+                  },
+                  onDismissed: (_) => context
+                      .read<SessionRepository>()
+                      .deleteSession(session.id),
+                  child: Card(
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                SessionDetailScreen(session: session),
+                          ),
+                        );
+                      },
+                      child: SessionRowView(session: session),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ],
       ),
@@ -179,7 +270,8 @@ class _SessionListScreenState extends State<SessionListScreen> {
               ),
             ],
             selected: {_filterStatus},
-            onSelectionChanged: (selection) => setState(() => _filterStatus = selection.first),
+            onSelectionChanged: (selection) =>
+                setState(() => _filterStatus = selection.first),
           ),
           const SizedBox(height: 8),
           SwitchListTile(
@@ -249,13 +341,17 @@ class SessionRowView extends StatelessWidget {
         .fold(0, (sum, s) => sum + s.points);
   }
 
-  SessionPlayer? _bestPlayer(List<SessionPlayer> players, List<RoundScore> scores) {
+  SessionPlayer? _bestPlayer(
+    List<SessionPlayer> players,
+    List<RoundScore> scores,
+    bool highestWins,
+  ) {
     if (players.isEmpty || scores.isEmpty) return null;
     SessionPlayer? best;
     var bestTotal = 0;
     for (final p in players) {
       final t = _total(scores, p);
-      if (best == null || t < bestTotal) {
+      if (best == null || (highestWins ? t > bestTotal : t < bestTotal)) {
         best = p;
         bestTotal = t;
       }
@@ -268,7 +364,9 @@ class SessionRowView extends StatelessWidget {
     final repository = context.watch<SessionRepository>();
     final players = repository.playersForSession(session.id);
     final scores = repository.scoresForSession(session.id);
-    final best = _bestPlayer(players, scores);
+    final highestWins =
+        GamesRegistry.game(session.gameId)?.highestWins ?? false;
+    final best = _bestPlayer(players, scores, highestWins);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -279,7 +377,13 @@ class SessionRowView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(session.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                Text(
+                  session.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -291,7 +395,10 @@ class SessionRowView extends StatelessWidget {
                       const SizedBox(width: 8),
                       Icon(Icons.people, size: 12, color: Colors.grey[600]),
                       const SizedBox(width: 2),
-                      Text('${players.length}', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                      Text(
+                        '${players.length}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
                     ],
                   ],
                 ),
@@ -299,7 +406,11 @@ class SessionRowView extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.emoji_events, size: 12, color: Colors.amber),
+                      const Icon(
+                        Icons.emoji_events,
+                        size: 12,
+                        color: Colors.amber,
+                      ),
                       const SizedBox(width: 4),
                       Text(best.name, style: const TextStyle(fontSize: 12)),
                       const SizedBox(width: 4),
@@ -331,7 +442,11 @@ class SessionRowView extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Icon(Icons.info_outline, size: 20, color: Colors.grey),
+                  child: const Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: Colors.grey,
+                  ),
                 ),
               ],
             ],
@@ -364,7 +479,14 @@ class SessionScoreSummarySheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sortedPlayers = [...players]..sort((a, b) => _total(a).compareTo(_total(b)));
+    final highestWins =
+        GamesRegistry.game(session.gameId)?.highestWins ?? false;
+    final sortedPlayers = [...players]
+      ..sort(
+        (a, b) => highestWins
+            ? _total(b).compareTo(_total(a))
+            : _total(a).compareTo(_total(b)),
+      );
 
     return SafeArea(
       child: Padding(
@@ -379,7 +501,10 @@ class SessionScoreSummarySheet extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       session.name,
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 17,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -400,19 +525,28 @@ class SessionScoreSummarySheet extends StatelessWidget {
                   final player = sortedPlayers[index];
                   final total = _total(player);
                   final isLeader = index == 0 && scores.isNotEmpty;
+                  final hasMedal = index < 3 && scores.isNotEmpty;
                   return ListTile(
                     leading: SizedBox(
                       width: 28,
-                      child: isLeader
-                          ? const Icon(Icons.emoji_events, color: Colors.amber)
-                          : Text('${index + 1}.', style: TextStyle(color: Colors.grey[600])),
+                      child: hasMedal
+                          ? Text(
+                              _medals[index],
+                              style: const TextStyle(fontSize: 20),
+                            )
+                          : Text(
+                              '${index + 1}.',
+                              style: TextStyle(color: Colors.grey[600]),
+                            ),
                     ),
                     title: Text(player.name),
                     trailing: Text(
                       '$total pts',
                       style: TextStyle(
-                        fontWeight: isLeader ? FontWeight.bold : FontWeight.normal,
-                        color: isLeader ? Colors.green : null,
+                        fontWeight: isLeader
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isLeader ? Brand.accent : null,
                       ),
                     ),
                   );

@@ -113,16 +113,22 @@ class SessionRepository extends ChangeNotifier {
     required String sessionId,
     required int roundNumber,
     required Map<String, int> pointsByPlayerName,
+    Map<String, int>? remainingCardsByPlayerName,
+    Map<String, int>? placedCardsByPlayerName,
   }) async {
     final db = await _database.open();
     final batch = db.batch();
     final entries = <RoundScore>[];
+    final createdAt = DateTime.now();
     pointsByPlayerName.forEach((playerName, points) {
       final entry = RoundScore(
         sessionId: sessionId,
         roundNumber: roundNumber,
         playerName: playerName,
         points: points,
+        createdAt: createdAt,
+        remainingCards: remainingCardsByPlayerName?[playerName],
+        placedCards: placedCardsByPlayerName?[playerName],
       );
       entries.add(entry);
       batch.insert('scores', _scoreToRow(entry));
@@ -137,6 +143,9 @@ class SessionRepository extends ChangeNotifier {
         roundNumber: e.roundNumber,
         playerName: e.playerName,
         points: e.points,
+        createdAt: e.createdAt,
+        remainingCards: e.remainingCards,
+        placedCards: e.placedCards,
       ));
     }
     notifyListeners();
@@ -153,6 +162,20 @@ class SessionRepository extends ChangeNotifier {
       where: 'id = ?',
       whereArgs: [session.id],
     );
+    notifyListeners();
+  }
+
+  Future<void> deleteSession(String sessionId) async {
+    final db = await _database.open();
+    final batch = db.batch();
+    batch.delete('players', where: 'sessionId = ?', whereArgs: [sessionId]);
+    batch.delete('scores', where: 'sessionId = ?', whereArgs: [sessionId]);
+    batch.delete('sessions', where: 'id = ?', whereArgs: [sessionId]);
+    await batch.commit(noResult: true);
+
+    _sessions.removeWhere((s) => s.id == sessionId);
+    _players.removeWhere((p) => p.sessionId == sessionId);
+    _scores.removeWhere((s) => s.sessionId == sessionId);
     notifyListeners();
   }
 
@@ -215,6 +238,9 @@ class SessionRepository extends ChangeNotifier {
         'roundNumber': s.roundNumber,
         'playerName': s.playerName,
         'points': s.points,
+        'createdAt': s.createdAt.millisecondsSinceEpoch,
+        'remainingCards': s.remainingCards,
+        'placedCards': s.placedCards,
       };
 
   RoundScore _scoreFromRow(Map<String, Object?> row) => RoundScore(
@@ -223,5 +249,8 @@ class SessionRepository extends ChangeNotifier {
         roundNumber: row['roundNumber'] as int,
         playerName: row['playerName'] as String,
         points: row['points'] as int,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(row['createdAt'] as int? ?? 0),
+        remainingCards: row['remainingCards'] as int?,
+        placedCards: row['placedCards'] as int?,
       );
 }

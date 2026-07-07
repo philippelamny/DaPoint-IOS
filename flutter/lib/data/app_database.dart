@@ -25,7 +25,7 @@ class AppDatabase {
   Future<Database> _openAt(String path) {
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions (
@@ -51,9 +51,19 @@ class AppDatabase {
             sessionId TEXT NOT NULL,
             roundNumber INTEGER NOT NULL,
             playerName TEXT NOT NULL,
-            points INTEGER NOT NULL
+            points INTEGER NOT NULL,
+            createdAt INTEGER NOT NULL DEFAULT 0,
+            remainingCards INTEGER,
+            placedCards INTEGER
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE scores ADD COLUMN createdAt INTEGER NOT NULL DEFAULT 0');
+          await db.execute('ALTER TABLE scores ADD COLUMN remainingCards INTEGER');
+          await db.execute('ALTER TABLE scores ADD COLUMN placedCards INTEGER');
+        }
       },
     );
   }
