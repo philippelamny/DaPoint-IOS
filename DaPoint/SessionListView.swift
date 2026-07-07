@@ -6,6 +6,8 @@ struct SessionListView: View {
 
     @Query private var sessions: [GameSession]
 
+    @Environment(\.modelContext) private var modelContext
+    @State private var showResetAlert = false
     @State private var filterExpanded = false
     @State private var filterName = ""
     @State private var filterStatus: SessionStatus? = .ongoing
@@ -79,6 +81,34 @@ struct SessionListView: View {
                     }
                 }
             }
+            if !sessions.isEmpty {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(role: .destructive) {
+                        showResetAlert = true
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                }
+            }
+        }
+        .alert("Réinitialiser la liste ?", isPresented: $showResetAlert) {
+            Button("Supprimer toutes les parties", role: .destructive) {
+                resetAllSessions()
+            }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("Toutes les parties et leurs scores seront supprimés définitivement.")
+        }
+    }
+
+    private func resetAllSessions() {
+        for session in sessions {
+            let sid = session.id
+            try? modelContext.delete(model: SessionPlayer.self,
+                where: #Predicate<SessionPlayer> { $0.sessionId == sid })
+            try? modelContext.delete(model: RoundScore.self,
+                where: #Predicate<RoundScore> { $0.sessionId == sid })
+            modelContext.delete(session)
         }
     }
 
