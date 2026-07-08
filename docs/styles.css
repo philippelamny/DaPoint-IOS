@@ -1,0 +1,248 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: dark;
+  color: #ffffff;
+  background: #090b1a;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, rgba(46, 66, 211, 0.25), transparent 35%),
+              radial-gradient(circle at right, rgba(126, 36, 211, 0.22), transparent 25%),
+              linear-gradient(180deg, #14182d 0%, #090b1a 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 20% 15%, rgba(255, 158, 0, 0.12), transparent 20%),
+              radial-gradient(circle at 80% 25%, rgba(46, 66, 211, 0.18), transparent 18%);
+  pointer-events: none;
+}
+
+main {
+  position: relative;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.hero {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(18px);
+  border-radius: 32px;
+  padding: 32px;
+  display: grid;
+  gap: 24px;
+}
+
+.hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.hero-logo {
+  width: 120px;
+  min-width: 120px;
+  border-radius: 32px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.15);
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #aad4ff;
+  font-size: 0.8rem;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 4vw, 4rem);
+  line-height: 1.02;
+}
+
+.subtitle {
+  margin: 16px 0 0;
+  max-width: 700px;
+  color: rgba(255,255,255,0.82);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero-badges span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  font-size: 0.95rem;
+}
+
+section {
+  margin-top: 32px;
+}
+
+h2 {
+  margin: 0 0 18px;
+  font-size: 1.55rem;
+}
+
+p, li {
+  color: rgba(255,255,255,0.84);
+}
+
+ul {
+  padding-left: 1.4rem;
+  margin: 0;
+}
+
+ul.link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul.link-list li {
+  margin-bottom: 12px;
+}
+
+ul.link-list li a {
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+ul.link-list li a:hover {
+  color: #ffd071;
+  border-color: rgba(255,209,113,0.28);
+}
+
+.code, code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background: rgba(255,255,255,0.06);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.35rem;
+}
+
+.section-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.callout {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  padding: 28px;
+  border-radius: 24px;
+}
+
+.contact-block {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  padding: 28px;
+  border-radius: 24px;
+  margin-top: 22px;
+}
+
+.contact-block p {
+  margin: 0 0 16px;
+}
+
+.contact-link a {
+  display: inline-flex;
+  align-items: center;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+  color: #ffffff;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.contact-link a:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+pre {
+  margin: 16px 0 0;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.05);
+  overflow-x: auto;
+}
+
+@media (max-width: 720px) {
+  main {
+    padding: 24px 16px 48px;
+  }
+
+  .hero {
+    padding: 24px;
+  }
+
+  .screens-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .screen-card {
+    padding: 14px;
+  }
+}
+
+.screens {
+  margin-top: 32px;
+}
+
+.screens-grid,
+.screenshot-grid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.screen-card,
+.screenshot-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 28px;
+  padding: 18px;
+}
+
+.screen-card img,
+.screenshot-card img {
+  width: 100%;
+  height: auto;
+  border-radius: 20px;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.screen-card p,
+.screenshot-card p {
+  margin: 0;
+  color: rgba(255,255,255,0.82);
+  font-size: 0.98rem;
+}
+
+.screenshot-card {
+  padding: 12px;
+}

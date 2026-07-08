@@ -1,0 +1,11 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="favicon DaPoint">
+  <defs>
+    <linearGradient id="favGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E42D3"/>
+      <stop offset="100%" stop-color="#7E24D3"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="28" fill="url(#favGrad)"/>
+  <text x="50%" y="52%" fill="#fff" font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="78" font-weight="900" text-anchor="middle" dominant-baseline="middle">D</text>
+  <circle cx="85" cy="90" r="12" fill="#FF9E00"/>
+</svg>
