@@ -240,6 +240,12 @@ def build_html(games, version, releases):
       <p>Pour mettre à jour la page : placez un build dans <code>presentation/releases</code>, puis lancez la tâche VS Code suivante :</p>
       <pre>Flutter: build APK (release, versioned)</pre>
     </section>
+
+    <section class="contact-block">
+      <h2>Contact</h2>
+      <p>Pour toute demande d’évolution, écris-moi à :</p>
+      <p class="contact-link"><a href="mailto:philippe.lam.ny@gmail.com?subject=Demande%20d%27%C3%A9volution">philippe.lam.ny@gmail.com</a></p>
+    </section>
   </main>
 </body>
 </html>
