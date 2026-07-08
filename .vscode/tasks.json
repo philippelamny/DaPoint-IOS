@@ -59,7 +59,7 @@
     {
       "label": "Flutter: build APK (release, versioned)",
       "type": "shell",
-      "command": "cd flutter && mkdir -p build/releases && VERSION=$(grep '^version:' pubspec.yaml | head -n 1 | cut -d ' ' -f2 | tr -d '\\r' | tr '+' '-') && TIMESTAMP=$(date +%Y%m%d-%H%M) && flutter build apk --release && cp build/app/outputs/flutter-apk/app-release.apk \"build/releases/da_point-${VERSION}-${TIMESTAMP}.apk\"",
+      "command": "cd flutter && mkdir -p build/releases ../presentation/releases && VERSION=$(grep '^version:' pubspec.yaml | head -n 1 | cut -d ' ' -f2 | tr -d '\\r' | tr '+' '-') && TIMESTAMP=$(date +%Y%m%d-%H%M) && flutter build apk --release && cp build/app/outputs/flutter-apk/app-release.apk \"../presentation/releases/da_point-${VERSION}-${TIMESTAMP}.apk\" && cd ../presentation && python3 generate_site.py",
       "group": "build",
       "presentation": {
         "reveal": "always",
