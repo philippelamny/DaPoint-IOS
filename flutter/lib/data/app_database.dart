@@ -1,7 +1,7 @@
-import 'dart:io';
-
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 class AppDatabase {
   static const _dbFileName = 'da_point.db';
@@ -10,13 +10,17 @@ class AppDatabase {
   Future<Database> open() async {
     final db = _db;
     if (db != null) return db;
-    final dir = await getDatabasesPath();
-    final path = join(dir, _dbFileName);
+    if (kIsWeb) {
+      // sqflite has no native web backend: back it with a SQLite build
+      // compiled to WebAssembly, persisted in the browser (OPFS/IndexedDB).
+      databaseFactory = databaseFactoryFfiWeb;
+    }
+    final path = kIsWeb ? _dbFileName : join(await getDatabasesPath(), _dbFileName);
     try {
       _db = await _openAt(path);
     } catch (_) {
       // Schéma modifié en développement — on repart sur un store vierge
-      await _deleteStoreFiles(path);
+      await databaseFactory.deleteDatabase(path);
       _db = await _openAt(path);
     }
     return _db!;
@@ -66,14 +70,5 @@ class AppDatabase {
         }
       },
     );
-  }
-
-  Future<void> _deleteStoreFiles(String path) async {
-    for (final suffix in ['', '-wal', '-shm', '-journal']) {
-      final f = File('$path$suffix');
-      if (await f.exists()) {
-        await f.delete();
-      }
-    }
   }
 }
