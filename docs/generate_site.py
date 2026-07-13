@@ -110,6 +110,10 @@ def list_releases():
     return files
 
 
+def web_app_available():
+    return (ROOT / 'appli' / 'index.html').exists()
+
+
 def list_screenshots():
     screenshot_dir = ROOT / 'screenshots'
     if not screenshot_dir.exists():
@@ -121,7 +125,7 @@ def list_screenshots():
     return files
 
 
-def build_html(games, version, releases):
+def build_html(games, version, releases, web_app):
     updated = datetime.now().strftime('%Y-%m-%d %H:%M')
     if releases:
         latest_date = parse_build_timestamp(releases[0].name)
@@ -155,6 +159,27 @@ def build_html(games, version, releases):
     else:
         game_items.append('<li>Aucun jeu enregistré pour le moment.</li>')
 
+    latest_release_href = f'releases/{releases[0].name}' if releases else '#builds'
+    latest_release_label = 'Télécharger la dernière version' if releases else 'Aucun build pour le moment'
+
+    web_app_cta = (
+        '<a class="cta secondary" href="appli/">🌐 Essayer dans le navigateur</a>'
+        if web_app else ''
+    )
+
+    if web_app:
+        web_app_section = '''<section>
+      <h2>Utiliser la version web</h2>
+      <p>Pas envie d’installer un APK ? L’appli tourne aussi directement dans le navigateur, sans rien installer.</p>
+      <ul>
+        <li><a href="appli/">Ouvrir l’appli web</a> — fonctionne sur ordinateur, tablette ou mobile.</li>
+        <li>Les parties sont sauvegardées dans le navigateur utilisé (pas de compte, pas de synchronisation entre appareils).</li>
+        <li>Ajoutez la page à votre écran d’accueil pour un accès en un tap, comme une vraie appli.</li>
+      </ul>
+    </section>'''
+    else:
+        web_app_section = ''
+
     return f'''<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -175,6 +200,10 @@ def build_html(games, version, releases):
           <p class="eyebrow">Application DaPoint</p>
           <h1>Gestion simple des scores pour Txek et Ligretto</h1>
           <p class="subtitle">Compatible avec les deux jeux déjà disponibles, et prête à accueillir de nouveaux favoris.</p>
+          <div class="hero-ctas">
+            <a class="cta" href="{latest_release_href}" download>⬇️ {latest_release_label}</a>
+            {web_app_cta}
+          </div>
         </div>
       </div>
       <div class="hero-badges">
@@ -234,11 +263,14 @@ def build_html(games, version, releases):
       <p>Cela fonctionne tant que le système accepte l’APK et que les permissions sont activées sur l’appareil.</p>
     </section>
 
+    {web_app_section}
+
     <section class="callout">
       <h2>Sources et documentations</h2>
       <p>Le code source est disponible sur <a href="{GITHUB_URL}" target="_blank" rel="noopener">GitHub</a> et le <a href="{README_URL}" target="_blank" rel="noopener">README principal</a> décrit le projet et les étapes de build.</p>
-      <p>Pour mettre à jour la page : placez un build dans <code>docs/releases</code>, puis lancez la tâche VS Code suivante :</p>
-      <pre>Flutter: build APK (release, versioned)</pre>
+      <p>Pour mettre à jour la page, depuis la racine du projet, lancez :</p>
+      <pre>docs/build_release.sh</pre>
+      <p>Le script compile un APK release, le copie versionné dans <code>docs/releases/</code>, construit la version web dans <code>docs/appli/</code>, puis régénère cette page automatiquement.</p>
     </section>
 
     <section class="contact-block">
@@ -256,9 +288,13 @@ def main():
     games = parse_games()
     version = parse_version()
     releases = list_releases()
-    html = build_html(games, version, releases)
+    web_app = web_app_available()
+    html = build_html(games, version, releases, web_app)
     OUTPUT.write_text(html, encoding='utf-8')
-    print(f'Généré {OUTPUT.relative_to(ROOT)} — {len(games)} jeu(x), {len(releases)} build(s)')
+    print(
+        f'Généré {OUTPUT.relative_to(ROOT)} — {len(games)} jeu(x), {len(releases)} build(s), '
+        f'appli web {"présente" if web_app else "absente"}'
+    )
 
 
 if __name__ == '__main__':

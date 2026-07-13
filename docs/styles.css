@@ -85,6 +85,42 @@ main {
   line-height: 1.75;
 }
 
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2e42d3, #7d24d4);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 14px 30px rgba(46, 66, 211, 0.35);
+}
+
+.cta:hover {
+  filter: brightness(1.1);
+}
+
+.cta.secondary {
+  background: transparent;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: none;
+}
+
+.cta.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
 .hero-badges {
   display: flex;
   flex-wrap: wrap;

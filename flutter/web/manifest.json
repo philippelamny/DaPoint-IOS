@@ -1,11 +1,11 @@
 {
-    "name": "da_point",
-    "short_name": "da_point",
+    "name": "DaPoint",
+    "short_name": "DaPoint",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#2E42D3",
+    "theme_color": "#2E42D3",
+    "description": "DaPoint — suivi de score pour vos jeux de société.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
