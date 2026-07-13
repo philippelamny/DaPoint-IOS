@@ -22,14 +22,17 @@ flutter build apk --release
 cp "build/app/outputs/flutter-apk/app-release.apk" "$ROOT_DIR/docs/releases/${APK_NAME}"
 echo "==> Copied to docs/releases/${APK_NAME}"
 
-REPO_NAME=$(basename -s .git "$(git config --get remote.origin.url)")
-
 echo "==> flutter build web --release"
-flutter build web --release --base-href "/${REPO_NAME}/appli/"
+flutter build web --release --base-href "/"
 
 rm -rf "$ROOT_DIR/docs/appli"
 mkdir -p "$ROOT_DIR/docs/appli"
 cp -r build/web/. "$ROOT_DIR/docs/appli/"
+
+# Flutter's CLI rejects a relative --base-href, so patch it in after the
+# build: relative "./" works whether the app is served at the repo root,
+# under /appli/ locally, or on GitHub Pages under /<repo>/appli/.
+sed -i '' 's#<base href="/">#<base href="./">#' "$ROOT_DIR/docs/appli/index.html"
 echo "==> Copied web app to docs/appli/"
 
 cd "$ROOT_DIR/docs"

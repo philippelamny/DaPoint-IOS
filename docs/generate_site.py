@@ -114,14 +114,26 @@ def web_app_available():
     return (ROOT / 'appli' / 'index.html').exists()
 
 
+# Explicit selection and order for the "Aperçu" section — edit this list to
+# change which screenshots appear, rather than hand-editing index.html
+# (that file is regenerated on every build_release.sh run).
+SCREENSHOT_ORDER = [
+    'screen_app1.png',
+    'screen_app2.png',
+    'screen_new_game.png',
+    'screen_serre_de_nancy_score_entry.png',
+]
+
+
 def list_screenshots():
     screenshot_dir = ROOT / 'screenshots'
     if not screenshot_dir.exists():
         return []
-    files = [p for p in screenshot_dir.iterdir() if p.is_file() and p.suffix.lower() in {'.png', '.jpg', '.jpeg', '.webp'}]
-    files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-    # Prioritize the new Serre de Nancy score-entry screenshot first, then other score-entry screenshots.
-    files.sort(key=lambda p: 0 if 'serre_de_nancy' in p.name else (1 if 'score_entry' in p.name else 2))
+    files = []
+    for name in SCREENSHOT_ORDER:
+        path = screenshot_dir / name
+        if path.is_file():
+            files.append(path)
     return files
 
 
@@ -225,9 +237,6 @@ def build_html(games, version, releases, web_app):
     <section class="screens">
       <h2>Aperçu</h2>
       <div class="screens-grid">
-        <div class="screen-card">
-          <img src="screen-live-game.svg" alt="Partie en cours DaPoint" />
-        </div>
         {''.join(screenshot_items)}
       </div>
     </section>
