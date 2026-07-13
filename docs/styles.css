@@ -200,6 +200,22 @@ code {
   border-radius: 24px;
 }
 
+.warning {
+  border: 1px solid rgba(255, 158, 0, 0.35);
+  background: rgba(255, 158, 0, 0.08);
+  padding: 20px 24px;
+  border-radius: 20px;
+  margin-top: 18px;
+}
+
+.warning p {
+  margin: 0;
+}
+
+.warning strong {
+  color: #ffb84d;
+}
+
 .contact-block {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
