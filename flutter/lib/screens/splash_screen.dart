@@ -32,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
     _pointAnim = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.45, 0.85, curve: Curves.elasticOut),
+      curve: const Interval(0.4, 0.9, curve: Curves.bounceOut),
     );
     _textAnim = CurvedAnimation(
       parent: _controller,

@@ -118,8 +118,9 @@ class LogoMark extends StatelessWidget {
 
   final double size;
 
-  /// 0 = point hidden, 1 = point at rest. Values above 1 are expected
-  /// mid-way through an overshoot/bounce entrance animation.
+  /// 0 = point above its resting spot (mid-fall), 1 = point at rest.
+  /// Drive this with a bounce curve (e.g. [Curves.bounceOut]) for a
+  /// dropping-ball entrance; values stay within 0..1.
   final double pointProgress;
 
   @override
@@ -128,6 +129,7 @@ class LogoMark extends StatelessWidget {
       width: size,
       height: size,
       child: Stack(
+        clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
           Text(
@@ -142,8 +144,8 @@ class LogoMark extends StatelessWidget {
           Positioned(
             left: size / 2 + size * 0.265 - size * 0.1,
             top: size / 2 + size * 0.225 - size * 0.1,
-            child: Transform.scale(
-              scale: pointProgress.clamp(0.0, double.infinity),
+            child: Transform.translate(
+              offset: Offset(0, (1 - pointProgress.clamp(0.0, 1.0)) * -size * 0.6),
               child: Container(
                 width: size * 0.2,
                 height: size * 0.2,
