@@ -12,6 +12,9 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  late final Animation<double> _dAnim;
+  late final Animation<double> _pointAnim;
+  late final Animation<double> _textAnim;
   bool _visible = false;
 
   @override
@@ -19,7 +22,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 650),
+      duration: const Duration(milliseconds: 1200),
+    );
+    // Staggered reveal: the "D" pops in, then the orange point bounces
+    // into place, then the wordmark fades up.
+    _dAnim = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.5, curve: Curves.easeOutBack),
+    );
+    _pointAnim = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.45, 0.85, curve: Curves.elasticOut),
+    );
+    _textAnim = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.75, 1.0, curve: Curves.easeOut),
     );
     _runAnimation();
   }
@@ -27,7 +44,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Future<void> _runAnimation() async {
     setState(() => _visible = true);
     await _controller.forward();
-    await Future<void>.delayed(const Duration(milliseconds: 1600));
+    await Future<void>.delayed(const Duration(milliseconds: 1400));
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
@@ -48,28 +65,32 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    final curved = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: Brand.gradient),
         child: Center(
           child: AnimatedBuilder(
-            animation: curved,
+            animation: _controller,
             builder: (context, child) {
-              final scale = _visible ? 0.55 + 0.45 * curved.value : 0.55;
-              final opacity = _visible ? curved.value.clamp(0.0, 1.0) : 0.0;
+              final dScale = _visible ? 0.55 + 0.45 * _dAnim.value : 0.55;
+              final dOpacity = _visible ? _dAnim.value.clamp(0.0, 1.0) : 0.0;
+              final pointProgress = _visible ? _pointAnim.value : 0.0;
+              final textOpacity = _visible ? _textAnim.value.clamp(0.0, 1.0) : 0.0;
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Transform.scale(
-                    scale: scale,
-                    child: Opacity(opacity: opacity, child: const LogoMark(size: 140)),
+                    scale: dScale,
+                    child: Opacity(
+                      opacity: dOpacity,
+                      child: LogoMark(size: 140, pointProgress: pointProgress),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Opacity(
-                    opacity: opacity,
+                    opacity: textOpacity,
                     child: Transform.translate(
-                      offset: Offset(0, (1 - opacity) * 12),
+                      offset: Offset(0, (1 - textOpacity) * 12),
                       child: Column(
                         children: [
                           const Text(

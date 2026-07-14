@@ -114,9 +114,13 @@ abstract final class Brand {
 /// Mirrors LogoMark from AppIconView.swift: the "D" of DaPoint with its
 /// accent-colored "point" dot.
 class LogoMark extends StatelessWidget {
-  const LogoMark({super.key, this.size = 120});
+  const LogoMark({super.key, this.size = 120, this.pointProgress = 1.0});
 
   final double size;
+
+  /// 0 = point hidden, 1 = point at rest. Values above 1 are expected
+  /// mid-way through an overshoot/bounce entrance animation.
+  final double pointProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -138,18 +142,21 @@ class LogoMark extends StatelessWidget {
           Positioned(
             left: size / 2 + size * 0.265 - size * 0.1,
             top: size / 2 + size * 0.225 - size * 0.1,
-            child: Container(
-              width: size * 0.2,
-              height: size * 0.2,
-              decoration: BoxDecoration(
-                color: Brand.accent,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: size * 0.05,
-                  ),
-                ],
+            child: Transform.scale(
+              scale: pointProgress.clamp(0.0, double.infinity),
+              child: Container(
+                width: size * 0.2,
+                height: size * 0.2,
+                decoration: BoxDecoration(
+                  color: Brand.accent,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: size * 0.05,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
